@@ -11,9 +11,6 @@ import base64
 from io import BytesIO
 import psycopg
 
-df = pd.read_csv("./data.csv")
-
-
 
 class DataSets:
 
