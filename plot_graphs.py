@@ -3,6 +3,7 @@ import plotly.express as px
 import dash_ag_grid as dag                       # pip install dash-ag-grid
 import dash_bootstrap_components as dbc          # pip install dash-bootstrap-components
 import pandas as pd                              # pip install pandas
+from dash_dangerously_set_inner_html import DangerouslySetInnerHTML
 
 import matplotlib                                # pip install matplotlib
 matplotlib.use('agg')
@@ -49,7 +50,6 @@ data = DataSets()
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.layout = dbc.Container([
     html.H1("Interactive Matplotlib with Dash", className='mb-2', style={'textAlign':'center'}),
-
     dbc.Row([
         dbc.Col([
             dcc.Dropdown(
@@ -61,12 +61,14 @@ app.layout = dbc.Container([
             dcc.Dropdown(id="my-multi-dynamic-dropdown"),
         ]),
     ]),
-
     dbc.Row([
         dbc.Col([
             html.Img(id='bar-graph-matplotlib')
         ], width=12)
     ]),
+    html.Div(
+        [html.Div(id='transect_output')],
+    ),
 
 ])
 
@@ -74,6 +76,7 @@ app.layout = dbc.Container([
 @app.callback(
     # Output(component_id='bar-graph-matplotlib', component_property='src'),
     Output("my-multi-dynamic-dropdown", "options"),
+    Output("transect_output", "children"),
     Input('category', 'value'),
 )
 def plot_data(selected_yaxis):
@@ -82,9 +85,10 @@ def plot_data(selected_yaxis):
     fig = plt.figure(figsize=(14, 5))
     filtered_dataset = data.sql_data_field_notes.loc[data.sql_data_field_notes['device_id'] == selected_yaxis]
     data.current_filtered_dataset = filtered_dataset
+    transect_notes = data.field_notes.loc[data.field_notes['device_id'] == selected_yaxis]
 
     # return fig_bar_matplotlib, filtered_dataset['unit'].unique()
-    return filtered_dataset['unit'].unique()
+    return filtered_dataset['unit'].unique(), DangerouslySetInnerHTML(transect_notes.to_html())
 
 
 # Create interactivity between dropdown component and graph
