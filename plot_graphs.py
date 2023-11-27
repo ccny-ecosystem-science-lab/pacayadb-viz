@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 import psycopg
-
+import numpy
 
 class DataSets:
 
@@ -76,6 +76,7 @@ app.layout = dbc.Container([
 @app.callback(
     # Output(component_id='bar-graph-matplotlib', component_property='src'),
     Output("my-multi-dynamic-dropdown", "options"),
+    Output('my-multi-dynamic-dropdown', 'value'),
     Output("transect_output", "children"),
     Input('category', 'value'),
 )
@@ -88,7 +89,7 @@ def plot_data(selected_yaxis):
     transect_notes = data.field_notes.loc[data.field_notes['device_id'] == selected_yaxis]
 
     # return fig_bar_matplotlib, filtered_dataset['unit'].unique()
-    return filtered_dataset['unit'].unique(), DangerouslySetInnerHTML(transect_notes.to_html())
+    return filtered_dataset['unit'].unique(), "", DangerouslySetInnerHTML(transect_notes.to_html())
 
 
 # Create interactivity between dropdown component and graph
@@ -98,11 +99,15 @@ def plot_data(selected_yaxis):
 )
 def plot_data_filtered(selected_yaxis):
 
+    # Ensure we close the existing figure if exists
+    plt.close()
+
     # Build the matplotlib figure
     fig = plt.figure(figsize=(14, 5))
-    filtered_dataset = data.current_filtered_dataset.loc[data.current_filtered_dataset['unit'] == selected_yaxis]
 
-    plt.plot(filtered_dataset['timestamp'], filtered_dataset['value'])
+    filtered_dataset = data.current_filtered_dataset.loc[data.current_filtered_dataset['unit'] == selected_yaxis]
+    x_labels = numpy.asarray(filtered_dataset['timestamp'], dtype=numpy.datetime64)
+    plt.plot(x_labels, filtered_dataset['value'])
     plt.ylabel(selected_yaxis)
     plt.xticks(rotation=30)
 
